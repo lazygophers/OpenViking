@@ -6,6 +6,7 @@ import time
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import httpx
 import pytest
 from fastapi import HTTPException
 from vikingbot.bus.events import OutboundMessage
@@ -423,7 +424,11 @@ async def test_recreated_connection_isolates_sessions_and_rejects_old_replies(
         channel._running = True
 
     provider = get_provider({"type": "feishu"})
-    monkeypatch.setattr(provider, "validate_app", AsyncMock(return_value={"open_id": "ou_bot"}))
+    monkeypatch.setattr(
+        provider,
+        "validate_app",
+        AsyncMock(return_value={"open_id": "ou_bot", "domain": "https://open.feishu.cn"}),
+    )
     monkeypatch.setattr(StudioFeishuChannel, "start", start)
     delivery = AsyncMock(return_value=True)
     monkeypatch.setattr(FeishuChannel, "send", delivery)
@@ -483,3 +488,108 @@ async def test_recreated_connection_isolates_sessions_and_rejects_old_replies(
     assert SessionManager(tmp_path).get_or_create(restored_event.session_key).get_history() == [
         {"role": "assistant", "content": "account B result"}
     ]
+
+
+async def test_validate_app_detects_lark_after_feishu_failure(monkeypatch):
+    def handler(request):
+        if request.url.host == "open.feishu.cn":
+            return httpx.Response(200, json={"code": 99991663, "msg": "invalid app_secret"})
+        if request.url.path.endswith("/tenant_access_token/internal"):
+            return httpx.Response(200, json={"code": 0, "tenant_access_token": "t-token"})
+        assert request.headers["Authorization"] == "Bearer t-token"
+        return httpx.Response(
+            200, json={"code": 0, "bot": {"open_id": "ou_lark", "app_name": "LarkBot"}}
+        )
+
+    real_client = httpx.AsyncClient
+
+    def client_factory(**kwargs):
+        return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+    monkeypatch.setattr(httpx, "AsyncClient", client_factory)
+    info = await get_provider({"type": "feishu"}).validate_app("cli_test", "secret")
+    assert info["domain"] == "https://open.larksuite.com"
+    assert info["open_id"] == "ou_lark"
+
+
+async def test_validate_app_feishu_success_skips_lark(monkeypatch):
+    requested_hosts = []
+
+    def handler(request):
+        requested_hosts.append(request.url.host)
+        if request.url.path.endswith("/tenant_access_token/internal"):
+            return httpx.Response(200, json={"code": 0, "tenant_access_token": "t-token"})
+        return httpx.Response(
+            200, json={"code": 0, "bot": {"open_id": "ou_feishu", "app_name": "FeishuBot"}}
+        )
+
+    real_client = httpx.AsyncClient
+
+    def client_factory(**kwargs):
+        return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+    monkeypatch.setattr(httpx, "AsyncClient", client_factory)
+    info = await get_provider({"type": "feishu"}).validate_app("cli_test", "secret")
+    assert info["domain"] == "https://open.feishu.cn"
+    assert set(requested_hosts) == {"open.feishu.cn"}
+
+
+async def test_validate_app_both_domains_fail_reports_both(monkeypatch):
+    def handler(request):
+        if request.url.host == "open.feishu.cn":
+            return httpx.Response(503)
+        return httpx.Response(200, json={"code": 99991663, "msg": "invalid app_secret"})
+
+    real_client = httpx.AsyncClient
+
+    def client_factory(**kwargs):
+        return real_client(transport=httpx.MockTransport(handler), **kwargs)
+
+    monkeypatch.setattr(httpx, "AsyncClient", client_factory)
+    with pytest.raises(HTTPException) as exc_info:
+        await get_provider({"type": "feishu"}).validate_app("cli_test", "secret")
+    message = exc_info.value.detail
+    assert "https://open.feishu.cn: Cannot reach Feishu" in message
+    assert "https://open.larksuite.com: Feishu rejected" in message
+
+
+async def test_credentials_uses_persisted_domain_without_probing(monkeypatch):
+    provider = get_provider({"type": "feishu"})
+    mock = AsyncMock(return_value={"open_id": "ou_bot"})
+    monkeypatch.setattr(provider, "validate_app", mock)
+    await provider.credentials(
+        {**record(), "domain": "https://open.larksuite.com"}, {"app_secret": "new-secret"}
+    )
+    assert mock.await_args.kwargs["domain"] == "https://open.larksuite.com"
+
+
+async def test_detected_domain_is_persisted_into_record_and_channel(tmp_path, monkeypatch):
+    provider = get_provider({"type": "feishu"})
+    monkeypatch.setattr(
+        provider,
+        "validate_app",
+        AsyncMock(return_value={"open_id": "ou_lark", "domain": "https://open.larksuite.com"}),
+    )
+    monkeypatch.setattr(StudioFeishuChannel, "start", AsyncMock())
+    service = StudioService(
+        SimpleNamespace(
+            bot_data_path=tmp_path,
+            workspace_path=tmp_path,
+            channels=[],
+            ov_server=OpenVikingConfig(),
+        ),
+        ChannelManager(MessageBus()),
+    )
+    result = await service.create(
+        "a",
+        {"type": "feishu", "credentials": {"app_id": "cli_lark", "app_secret": "secret"}},
+        {"account_id": "a", "user_id": "bot-user", "role": "user"},
+    )
+    await asyncio.gather(*service.tasks.values())
+    assert service.get("a", result["id"])["domain"] == "https://open.larksuite.com"
+    channel_configs = [
+        c
+        for c in service.config.channels
+        if isinstance(c, dict) and c.get("app_id") == "cli_lark"
+    ]
+    assert channel_configs[0]["domain"] == "https://open.larksuite.com"

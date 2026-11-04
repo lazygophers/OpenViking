@@ -8,6 +8,9 @@ from fastapi import HTTPException
 
 from vikingbot.config.schema import FeishuChannelConfig
 
+FEISHU_DOMAIN = "https://open.feishu.cn"
+LARK_DOMAIN = "https://open.larksuite.com"
+
 
 class FeishuProvider:
     type = "feishu"
@@ -56,12 +59,13 @@ class FeishuProvider:
             "app_secret": secret,
             "bot_name": info.get("app_name") or "VikingBot",
             "bot_open_id": info["open_id"],
+            "domain": info["domain"],
             "step": 2,
         }
 
     async def credentials(self, record, body):
         secret = str(body.get("app_secret") or record["app_secret"]).strip()
-        info = await self.validate_app(record["app_id"], secret)
+        info = await self.validate_app(record["app_id"], secret, domain=record.get("domain"))
         if info["open_id"] != record["bot_open_id"]:
             raise HTTPException(409, "Robot identity changed")
         return {**record, "app_secret": secret}
@@ -78,6 +82,7 @@ class FeishuProvider:
             app_id=record["app_id"],
             app_secret=record["app_secret"],
             bot_name=record["bot_name"],
+            domain=record.get("domain", FEISHU_DOMAIN),
             thread_require_mention=self.validate_settings(record.get("settings", {}))[
                 "thread_require_mention"
             ],
@@ -107,11 +112,24 @@ class FeishuProvider:
         service.config.channels.append(channel_config.model_dump(mode="json"))
         return channel
 
-    async def validate_app(self, app_id, secret):
+    async def validate_app(self, app_id, secret, domain=None):
+        errors = []
+        for candidate in [domain] if domain else [FEISHU_DOMAIN, LARK_DOMAIN]:
+            try:
+                info = await self._validate_on(candidate, app_id, secret)
+            except HTTPException as exc:
+                errors.append(f"{candidate}: {exc.detail}")
+                status = exc.status_code
+            else:
+                info["domain"] = candidate
+                return info
+        raise HTTPException(status, "; ".join(errors))
+
+    async def _validate_on(self, domain, app_id, secret):
         try:
             async with httpx.AsyncClient(timeout=15) as client:
                 auth_response = await client.post(
-                    "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+                    f"{domain}/open-apis/auth/v3/tenant_access_token/internal",
                     json={"app_id": app_id, "app_secret": secret},
                 )
                 auth_response.raise_for_status()
@@ -119,7 +137,7 @@ class FeishuProvider:
                 if auth.get("code") != 0 or not auth.get("tenant_access_token"):
                     raise HTTPException(400, "Feishu rejected the application credentials")
                 bot_response = await client.get(
-                    "https://open.feishu.cn/open-apis/bot/v3/info",
+                    f"{domain}/open-apis/bot/v3/info",
                     headers={"Authorization": "Bearer " + auth["tenant_access_token"]},
                 )
                 bot_response.raise_for_status()
