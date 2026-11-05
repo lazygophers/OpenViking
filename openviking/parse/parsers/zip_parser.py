@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from openviking.parse.base import ParseResult
-from openviking.parse.temp import get_parser_download_temp_dir
 from openviking.parse.parsers.base_parser import BaseParser
+from openviking.parse.temp import get_parser_download_temp_dir
 from openviking.utils.zip_safe import safe_extract_zip
 from openviking_cli.exceptions import InvalidArgumentError
 from openviking_cli.utils.logger import get_logger

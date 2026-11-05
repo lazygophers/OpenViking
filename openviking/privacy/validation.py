@@ -146,9 +146,7 @@ def _validate_json_tree(value: Any, *, location: str, depth: int) -> None:
 
 def _serialized_size(value: Mapping[str, Any]) -> int:
     return len(
-        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
-            "utf-8"
-        )
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     )
 
 

@@ -322,12 +322,17 @@ def format_label(label: str) -> str:
 def label_style(label: str) -> str:
     if label.endswith("_start"):
         return "bold yellow"
-    if "final" in label or label in {
-        "train",
-        "train_rollout",
-        "test_rollout",
-        "baseline_test_rollout",
-    } or label.endswith("_rollout"):
+    if (
+        "final" in label
+        or label
+        in {
+            "train",
+            "train_rollout",
+            "test_rollout",
+            "baseline_test_rollout",
+        }
+        or label.endswith("_rollout")
+    ):
         return "bold green"
     return "bold cyan"
 
@@ -367,8 +372,6 @@ async def run_with_progress(
             return result
 
     try:
-        return list(
-            await asyncio.gather(*(_run_one(item, idx) for idx, item in enumerate(items)))
-        )
+        return list(await asyncio.gather(*(_run_one(item, idx) for idx, item in enumerate(items))))
     finally:
         progress.finish()

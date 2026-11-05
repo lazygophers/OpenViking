@@ -34,8 +34,7 @@ class ProcessResult:
             if not isinstance(self.error, str):
                 raise ValueError("failed results require an error string")
             if self.errors is not None and (
-                not self.errors
-                or not all(isinstance(value, (str, dict)) for value in self.errors)
+                not self.errors or not all(isinstance(value, (str, dict)) for value in self.errors)
             ):
                 raise ValueError(
                     "failed result errors must be a non-empty tuple of strings or dicts"

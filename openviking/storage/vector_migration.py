@@ -17,7 +17,6 @@ from openviking.storage.abstract_overview import (
     rewrite_viking_uri_references,
 )
 from openviking.storage.acl import ACL_CONTEXT_FIELDS
-from openviking.storage.expr import And, Contains, Eq, Or, PathScope
 from openviking.storage.vector_ids import vector_record_id
 from openviking_cli.utils.uri import VikingURI
 

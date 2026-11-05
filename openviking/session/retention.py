@@ -418,9 +418,7 @@ def _partial_latest_turn_plan(
 
     archive_messages = _flatten_turns(older_turns)
     if retained_tokens > token_budget and retained_steps:
-        retained_source_messages = [
-            message for step in retained_steps for message in step.messages
-        ]
+        retained_source_messages = [message for step in retained_steps for message in step.messages]
         archived_source_messages = [*archived_source_messages, *retained_source_messages]
         retained_budget = max(
             1,

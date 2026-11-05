@@ -888,9 +888,7 @@ class TaskTracker:
                 if remaining is not None and remaining <= 0:
                     raise TimeoutError(f"Timed out waiting for Task {task_id}")
                 await asyncio.sleep(
-                    next_poll_interval
-                    if remaining is None
-                    else min(next_poll_interval, remaining)
+                    next_poll_interval if remaining is None else min(next_poll_interval, remaining)
                 )
                 next_poll_interval = min(_WAIT_MAX_POLL_INTERVAL, next_poll_interval * 2)
 
@@ -1249,9 +1247,7 @@ class TaskTracker:
                 if remaining is not None and remaining <= 0:
                     raise TimeoutError(f"Timed out waiting for Work in Task {task_id}")
                 await asyncio.sleep(
-                    next_poll_interval
-                    if remaining is None
-                    else min(next_poll_interval, remaining)
+                    next_poll_interval if remaining is None else min(next_poll_interval, remaining)
                 )
                 next_poll_interval = min(_WAIT_MAX_POLL_INTERVAL, next_poll_interval * 2)
 
@@ -1277,9 +1273,7 @@ class TaskTracker:
                 if remaining is not None and remaining <= 0:
                     raise TimeoutError(f"Timed out waiting for Work in Task {task_id}")
                 await asyncio.sleep(
-                    next_poll_interval
-                    if remaining is None
-                    else min(next_poll_interval, remaining)
+                    next_poll_interval if remaining is None else min(next_poll_interval, remaining)
                 )
                 next_poll_interval = min(_WAIT_MAX_POLL_INTERVAL, next_poll_interval * 2)
 
@@ -1322,8 +1316,7 @@ class TaskTracker:
                 "requeue_count": queue.requeue_count,
                 "error_count": queue.error_count,
                 "errors": [
-                    project_work_error(error)
-                    for error in queue.errors[:MAX_QUEUE_ERROR_DETAILS]
+                    project_work_error(error) for error in queue.errors[:MAX_QUEUE_ERROR_DETAILS]
                 ],
             }
         return result

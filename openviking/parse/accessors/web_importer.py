@@ -12,7 +12,6 @@ from typing import Any, Dict, Optional
 from urllib.parse import unquote, urlsplit, urlunsplit
 
 from openviking.parse.accessors.http_accessor import HTTPAccessor
-from openviking.parse.temp import get_parser_download_temp_dir
 from openviking.parse.accessors.web_crawler import CrawlConfig, ScrapyWebCrawler
 from openviking.parse.accessors.web_feed_accessor import (
     FeedEntry,
@@ -21,6 +20,7 @@ from openviking.parse.accessors.web_feed_accessor import (
     _sanitize_filename,
     url_to_relpath,
 )
+from openviking.parse.temp import get_parser_download_temp_dir
 from openviking_cli.exceptions import FailedPreconditionError, InvalidArgumentError
 
 DEPTH_UNLIMITED = -1
@@ -51,11 +51,7 @@ def parse_web_import_options(kwargs: Dict[str, Any]) -> WebImportOptions:
         raise InvalidArgumentError("args.max_pages must be -1 (unlimited) or >= 1.")
     allow_external_links = _pop_bool_arg(kwargs, "allow_external_links", False)
     skip_download_links = _pop_bool_arg(kwargs, "skip_download_links", True)
-    if (
-        depth == DEPTH_UNLIMITED
-        and max_pages == MAX_PAGES_UNLIMITED
-        and allow_external_links
-    ):
+    if depth == DEPTH_UNLIMITED and max_pages == MAX_PAGES_UNLIMITED and allow_external_links:
         raise InvalidArgumentError(
             "args.depth=-1 and args.max_pages=-1 cannot be combined with "
             "allow_external_links=true; at least one bound is required when "
@@ -99,9 +95,7 @@ class WebImporter:
                 raise FailedPreconditionError(message)
             raise RuntimeError(message)
 
-        temp_root = Path(
-            tempfile.mkdtemp(prefix="ov_web_", dir=get_parser_download_temp_dir())
-        )
+        temp_root = Path(tempfile.mkdtemp(prefix="ov_web_", dir=get_parser_download_temp_dir()))
         temp_dir = temp_root / _host_name(root_url)
         try:
             temp_dir.mkdir(parents=True, exist_ok=True)
@@ -167,7 +161,7 @@ class WebImporter:
         root_resolved = root.resolve()
         try:
             dest.relative_to(root_resolved)
-        except ValueError as exc:
+        except ValueError:
             digest = hashlib.sha1(relpath.encode("utf-8")).hexdigest()[:8]
             dest = root_resolved / f"page-{digest}.html"
         return dest

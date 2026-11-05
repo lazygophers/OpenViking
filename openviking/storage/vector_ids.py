@@ -20,7 +20,7 @@ consistent.
 
 import hashlib
 import re
-from typing import Any, Optional, Tuple
+from typing import Any
 
 _VECTOR_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 

@@ -43,10 +43,18 @@ def parse_args() -> argparse.Namespace:
         help="Max seconds to wait for each OpenViking session.commit task. Default waits indefinitely.",
     )
     parser.add_argument("--config", default=None, help="ov.conf path (optional)")
-    parser.add_argument("--server-url", default=None, help="OpenViking server URL. Defaults to ov.conf/ovcli.conf")
-    parser.add_argument("--api-key", default=None, help="OpenViking API key. Defaults to ov.conf/ovcli.conf")
-    parser.add_argument("--account-id", default="default", help="OpenViking trusted account id. Default: default")
-    parser.add_argument("--user-id", default="default", help="OpenViking trusted user id. Default: default")
+    parser.add_argument(
+        "--server-url", default=None, help="OpenViking server URL. Defaults to ov.conf/ovcli.conf"
+    )
+    parser.add_argument(
+        "--api-key", default=None, help="OpenViking API key. Defaults to ov.conf/ovcli.conf"
+    )
+    parser.add_argument(
+        "--account-id", default="default", help="OpenViking trusted account id. Default: default"
+    )
+    parser.add_argument(
+        "--user-id", default="default", help="OpenViking trusted user id. Default: default"
+    )
     parser.add_argument("--output", default=None, help="JSON report output path")
     parser.add_argument(
         "--events-output",
@@ -89,8 +97,7 @@ def parse_args() -> argparse.Namespace:
         "--force-baseline-recompute",
         action="store_true",
         help=(
-            "Recompute the cached pre-training baseline instead of reusing an "
-            "existing cache file."
+            "Recompute the cached pre-training baseline instead of reusing an existing cache file."
         ),
     )
     parser.add_argument(

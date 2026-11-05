@@ -65,16 +65,12 @@ class PipelineReportBuilder:
         trials = [
             {
                 "trial": trial_index,
-                **self.evaluation_summary_from_analyses(
-                    analyses_by_trial.get(trial_index, [])
-                ),
+                **self.evaluation_summary_from_analyses(analyses_by_trial.get(trial_index, [])),
             }
             for trial_index in range(trial_count)
         ]
         accuracies = [
-            float(item["accuracy"])
-            for item in trials
-            if item.get("accuracy") is not None
+            float(item["accuracy"]) for item in trials if item.get("accuracy") is not None
         ]
         average_rewards = [
             float(item["average_reward"])

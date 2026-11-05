@@ -179,7 +179,9 @@ class OpenGaussFulltextMixin:
             if not text.strip() or limit == 0:
                 return SearchResult(data=[])
             if not self.validate_fulltext_index(engine):
-                raise FailedPreconditionError(f"A verified, ready {engine} full-text index is required")
+                raise FailedPreconditionError(
+                    f"A verified, ready {engine} full-text index is required"
+                )
             spec = self._fulltext_spec()
             table = _quote_identifier(self._name)
             index = _validate_identifier(spec["name"], kind="full-text index name")

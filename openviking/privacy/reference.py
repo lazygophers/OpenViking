@@ -86,10 +86,7 @@ def parse_privacy_field_reference(value: str) -> PrivacyFieldReference | None:
     owner = match.group("owner")
     if validate_user_id(owner):
         return None
-    decoded = {
-        name: unquote(match.group(name))
-        for name in ("category", "target", "field")
-    }
+    decoded = {name: unquote(match.group(name)) for name in ("category", "target", "field")}
     if any(not item for item in decoded.values()):
         return None
     return PrivacyFieldReference(

@@ -312,7 +312,9 @@ async def run_batch_train_eval(config: BatchTrainEvalConfig) -> BatchTrainEvalRe
             latest_pointer_path=_latest_rollouts_path(config),
         )
         remote_executor = getattr(pipeline, "rollout_executor", None)
-        if isinstance(remote_executor, (RemoteRolloutExecutor, CachedEpochZeroTrainRolloutExecutor)):
+        if isinstance(
+            remote_executor, (RemoteRolloutExecutor, CachedEpochZeroTrainRolloutExecutor)
+        ):
             remote_executor.on_rollout_complete = (
                 rollout_artifact_recorder.record_rollout_completion
             )

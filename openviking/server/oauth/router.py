@@ -476,9 +476,7 @@ async def oauth_verify(
     manager = getattr(request.app.state, "api_key_manager", None)
     verifier_fp: Optional[str] = None
     if manager is not None:
-        verifier_fp = await manager.get_user_key_fingerprint(
-            ctx.user.account_id, ctx.user.user_id
-        )
+        verifier_fp = await manager.get_user_key_fingerprint(ctx.user.account_id, ctx.user.user_id)
     if not verifier_fp:
         raise InvalidArgumentError(
             "OAuth authorization requires a verifier with a registered API key "

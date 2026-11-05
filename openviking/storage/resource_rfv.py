@@ -169,9 +169,7 @@ async def build_rfv_snapshot(
     if not complete:
         raise ValueError("cannot build RFV snapshot from an incomplete formal tree")
 
-    nodes: dict[str, tuple[str, bool]] = (
-        {"": (root, root_is_dir)} if root_exists else {}
-    )
+    nodes: dict[str, tuple[str, bool]] = {"": (root, root_is_dir)} if root_exists else {}
     sidecars: dict[tuple[str, int], str] = {}
     source_metadata_uri: str | None = None
     for raw in raw_entries:

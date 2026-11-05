@@ -28,8 +28,7 @@ def validate_rollouts_have_cases(rollouts: list[Rollout]) -> None:
     ]
     if missing:
         raise ValueError(
-            "rollout training requires Rollout.case for all rollouts; "
-            f"missing indices={missing}"
+            f"rollout training requires Rollout.case for all rollouts; missing indices={missing}"
         )
 
 

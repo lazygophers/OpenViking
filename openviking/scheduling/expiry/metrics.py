@@ -43,8 +43,7 @@ class ExpiryMetrics:
         count: int,
     ) -> None:
         logger.error(
-            "expiry discarded invalid source items shard_id=%d minute_ms=%d "
-            "reason=%s count=%d",
+            "expiry discarded invalid source items shard_id=%d minute_ms=%d reason=%s count=%d",
             shard_id,
             minute_ms,
             reason,

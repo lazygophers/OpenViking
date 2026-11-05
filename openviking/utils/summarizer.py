@@ -283,7 +283,9 @@ class Summarizer:
         lock_guard = (
             lock
             if isinstance(lock, PathLockGuard)
-            else PathLockGuard(agfs, lock) if lock is not None else None
+            else PathLockGuard(agfs, lock)
+            if lock is not None
+            else None
         )
         lock_handoff: Optional[Dict[str, Any]] = None
         if lock_guard is not None:

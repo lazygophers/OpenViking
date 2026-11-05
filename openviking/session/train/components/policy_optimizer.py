@@ -113,8 +113,7 @@ class PatchMergePolicyOptimizer:
                 "gradient_count": len(gradients),
                 "patch_gradient_count": len(patch_gradients),
                 "gradients": [
-                    _gradient_to_dict(idx, gradient)
-                    for idx, gradient in enumerate(patch_gradients)
+                    _gradient_to_dict(idx, gradient) for idx, gradient in enumerate(patch_gradients)
                 ],
             },
         )
@@ -135,12 +134,9 @@ class PatchMergePolicyOptimizer:
         if self.vlm is None:
             if self.vlm_resolver is None:
                 raise RuntimeError(
-                    "PatchMergePolicyOptimizer requires a VLM resolver "
-                    "for account-owned work"
+                    "PatchMergePolicyOptimizer requires a VLM resolver for account-owned work"
                 )
-            vlm_config = await self.vlm_resolver.get_vlm(
-                context.request_context.account_id
-            )
+            vlm_config = await self.vlm_resolver.get_vlm(context.request_context.account_id)
             vlm = vlm_config
         else:
             vlm = self.vlm
@@ -197,11 +193,13 @@ class PatchMergePolicyOptimizer:
         operations, _ = await orchestrator.run()
         return operations
 
+
 def _constant_prefetch(messages: list[dict[str, Any]]):
     async def prefetch() -> list[dict[str, Any]]:
         return list(messages)
 
     return prefetch
+
 
 def _log_merge_input(
     *,
@@ -250,6 +248,7 @@ def _log_merge_input(
     lines.append("===================================================\n")
     tracer.info("\n".join(lines), console=console)
 
+
 def _log_merge_output(
     *,
     target: str,
@@ -286,6 +285,7 @@ def _log_merge_output(
     lines.append("====================================================\n")
     tracer.info("\n".join(lines), console=console)
 
+
 def _dump_model_or_value(value: Any) -> str:
     dumper = getattr(value, "model_dump_json", None)
     if dumper is not None:
@@ -294,6 +294,7 @@ def _dump_model_or_value(value: Any) -> str:
         except TypeError:
             return str(dumper())
     return str(value)
+
 
 def _memory_file_summary(file: MemoryFile | None) -> str:
     if file is None:
@@ -308,6 +309,7 @@ def _memory_file_summary(file: MemoryFile | None) -> str:
             "extra_fields": file.extra_fields,
         }
     )
+
 
 def _gradient_to_dict(index: int, gradient: SemanticGradient) -> dict[str, Any]:
     result = {
@@ -328,6 +330,7 @@ def _gradient_to_dict(index: int, gradient: SemanticGradient) -> dict[str, Any]:
         result["after_file"] = _memory_file_to_dict(after_file)
     return result
 
+
 def _memory_file_to_dict(file: MemoryFile) -> dict[str, Any]:
     return {
         "uri": file.uri,
@@ -341,6 +344,7 @@ def _memory_file_to_dict(file: MemoryFile) -> dict[str, Any]:
 
 def _links_to_dicts(links: list[StoredLink] | None) -> list[dict[str, Any]]:
     return [link.model_dump() for link in links or []]
+
 
 def _gradient_to_merge_patch(gradient: SemanticGradient) -> PatchMergePatch:
     return PatchMergePatch(
@@ -380,6 +384,7 @@ def _required_file_uris(
             uris.append(uri)
     return uris
 
+
 def _seed_read_file_contents(
     provider: PatchMergeContextProvider,
     gradients: list[SemanticGradient],
@@ -414,6 +419,7 @@ def _policy_to_memory_file(policy: Policy, *, memory_type: str = "experiences") 
         memory_type=memory_type,
         extra_fields=extra_fields,
     )
+
 
 def _operations_to_plan_items(
     *,
@@ -480,9 +486,7 @@ def _operations_to_plan_items(
                     "rationale": "PatchMergeContextProvider merged semantic gradients via ExtractLoop.",
                     "merge_gradient_count": len(gradients),
                     "merge_memory_fields": fields,
-                    "superseded_experience_uris": [
-                        policy.uri for policy in superseded_policies
-                    ],
+                    "superseded_experience_uris": [policy.uri for policy in superseded_policies],
                 },
             )
         )
@@ -573,6 +577,7 @@ def _fallback_policy_name(op: Any, *, memory_type: str) -> str:
                 return parts[-2]
         return uri.rstrip("/").split("/")[-1].removesuffix(".md")
     return f"unknown_{memory_type.rstrip('s')}"
+
 
 def _source_trajectory_links_from_experience(policy: Policy | None) -> list[StoredLink]:
     if policy is None:
@@ -715,11 +720,7 @@ def _plan_item_source_keys(
     # without turning duplicate-content batches into a broadcast.
     content = str(after_content or "").strip()
     if content:
-        matches = [
-            key
-            for key in all_keys
-            if key[0] == "content" and key[1].strip() == content
-        ]
+        matches = [key for key in all_keys if key[0] == "content" and key[1].strip() == content]
         if len(matches) == 1:
             add(matches[0])
 
@@ -850,6 +851,7 @@ def _find_policy_by_uri(policy_set: PolicySet, uri: str) -> Policy | None:
         if policy.uri == uri:
             return policy
     return None
+
 
 def _base_version_from_old_file_or_policy(
     old_file: Any, target_uri: str | None, policy_set: PolicySet

@@ -389,9 +389,7 @@ def append_task_events(task: TaskRecord, previous: Optional[TaskRecord]) -> None
             kind=kind,
             status=task.status.value,
             stage=sanitize_error(stage) if stage else None,
-            error=sanitize_error(task.error)
-            if kind == "error_recorded" and task.error
-            else None,
+            error=sanitize_error(task.error) if kind == "error_recorded" and task.error else None,
             recorded_at=recorded_at,
         )
 
@@ -403,10 +401,7 @@ def queue_result(summary: Optional[QueueWorkSummary]) -> Dict[str, Any]:
         "processed": summary.processed,
         "requeue_count": summary.requeue_count,
         "error_count": summary.error_count,
-        "errors": [
-            project_work_error(error)
-            for error in summary.errors[:MAX_QUEUE_ERROR_DETAILS]
-        ],
+        "errors": [project_work_error(error) for error in summary.errors[:MAX_QUEUE_ERROR_DETAILS]],
     }
 
 
@@ -462,9 +457,7 @@ def finalize_task(task: TaskRecord, works: Iterable[WorkRecord]) -> bool:
         ):
             if task.result.get(field_name) == "queued":
                 task.result[field_name] = (
-                    "failed"
-                    if projected.get(queue_name, {}).get("error_count", 0)
-                    else "complete"
+                    "failed" if projected.get(queue_name, {}).get("error_count", 0) else "complete"
                 )
     task.stage = task.status.value
     task.auth = {}

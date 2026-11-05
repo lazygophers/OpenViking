@@ -190,8 +190,7 @@ class MemoryReadTool(MemoryTool):
                 "uri": {
                     "type": "string",
                     "description": (
-                        "Memory URI to read. e.g., current user: "
-                        "'viking://~/memories/profile.md'"
+                        "Memory URI to read. e.g., current user: 'viking://~/memories/profile.md'"
                     ),
                 },
                 "offset": {
@@ -351,8 +350,7 @@ class MemoryLsTool(MemoryTool):
                 "uri": {
                     "type": "string",
                     "description": (
-                        "Directory URI to list. e.g., current user: "
-                        "'viking://~/memories'"
+                        "Directory URI to list. e.g., current user: 'viking://~/memories'"
                     ),
                 },
                 "recursive": {

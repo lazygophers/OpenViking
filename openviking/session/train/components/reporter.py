@@ -392,13 +392,7 @@ class ConsolePipelineReporter(NoopPipelineLifecycleHook):
 
     def _print_line(self, label: str, fields: list[tuple[Any, ...]]) -> None:
         if not self.use_rich:
-            print(
-                f"[{label}] "
-                + " ".join(
-                    _plain_field(item)
-                    for item in fields
-                )
-            )
+            print(f"[{label}] " + " ".join(_plain_field(item) for item in fields))
             return
         console = Console()
         line = Text()

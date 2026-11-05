@@ -777,10 +777,7 @@ class ReindexExecutor:
 
         for record in inventory.values():
             root, depth = scope_root(record)
-            if (
-                root
-                and (depth > 1 or int(record.get("level", -1)) in {0, 1})
-            ):
+            if root and (depth > 1 or int(record.get("level", -1)) in {0, 1}):
                 directory_roots.add(root)
         groups: dict[str, dict[str, Mapping[str, Any]]] = {}
         root_inventory = {}

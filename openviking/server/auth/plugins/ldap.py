@@ -46,7 +46,7 @@ _LDAP_OPERATION_TIMEOUT = 10.0
 
 _DN_VALUE_ESCAPES = {
     "\x00": r"\00",
-    '"': r'\"',
+    '"': r"\"",
     "+": r"\+",
     ",": r"\,",
     ";": r"\;",
@@ -131,9 +131,7 @@ class LDAPAuthPlugin(AuthPlugin):
     ) -> ResolvedIdentity:
         """Resolve identity from LDAP authentication."""
         if not LDAP_AVAILABLE:
-            raise UnauthenticatedError(
-                "LDAP authentication not available: missing python-ldap"
-            )
+            raise UnauthenticatedError("LDAP authentication not available: missing python-ldap")
         if self._config is None:
             raise RuntimeError("LDAP config not initialized")
         if self._mapper is None:
@@ -154,15 +152,11 @@ class LDAPAuthPlugin(AuthPlugin):
         # slow/unreachable directory cannot stall the event loop (and thus
         # unrelated requests on the same worker).
         try:
-            attributes = await asyncio.to_thread(
-                self._authenticate_ldap, username, password
-            )
+            attributes = await asyncio.to_thread(self._authenticate_ldap, username, password)
             logger.debug("Successfully authenticated LDAP user: %s", username)
             # Log available attributes for debugging
             if attributes:
-                logger.debug(
-                    "Available LDAP attributes: %s", list(attributes.keys())
-                )
+                logger.debug("Available LDAP attributes: %s", list(attributes.keys()))
         except ldap.LDAPError as e:
             error_code = getattr(e, "args", [None])[0] if e.args else None
             logger.debug(
@@ -184,12 +178,8 @@ class LDAPAuthPlugin(AuthPlugin):
             dn_bytes = attributes.get("dn", [None])[0] if attributes else None
             dn = dn_bytes.decode("utf-8") if dn_bytes else None
 
-            account_id = self._mapper.map_account_id(
-                claims={}, attributes=normalized_attrs, dn=dn
-            )
-            user_id = self._mapper.map_user_id(
-                claims={}, attributes=normalized_attrs, dn=dn
-            )
+            account_id = self._mapper.map_account_id(claims={}, attributes=normalized_attrs, dn=dn)
+            user_id = self._mapper.map_user_id(claims={}, attributes=normalized_attrs, dn=dn)
         except ValueError as e:
             logger.error("Failed to map LDAP attributes: %s", e)
             raise UnauthenticatedError(f"Failed to map attributes: {e}") from e
@@ -260,9 +250,7 @@ class LDAPAuthPlugin(AuthPlugin):
         assert self._config is not None
         safe_username = ldap.filter.escape_filter_chars(username)
         search_filter = self._config.user_search_filter % safe_username
-        search_base = (
-            self._config.user_search_base or self._config.base_dn
-        )
+        search_base = self._config.user_search_base or self._config.base_dn
         logger.debug(
             "Searching for user with filter: %s, base: %s",
             search_filter,
@@ -281,9 +269,7 @@ class LDAPAuthPlugin(AuthPlugin):
                 return dn, attrs
         return None, {}
 
-    def _authenticate_ldap(
-        self, username: str, password: str
-    ) -> Dict[str, List[bytes]]:
+    def _authenticate_ldap(self, username: str, password: str) -> Dict[str, List[bytes]]:
         """Authenticate user against LDAP server and return attributes.
 
         This is a synchronous method; callers must run it in a worker thread.
@@ -306,12 +292,8 @@ class LDAPAuthPlugin(AuthPlugin):
             #    deployments).
             search_conn = self._new_connection(ldap_url)
             try:
-                search_conn.simple_bind_s(
-                    self._config.bind_dn, self._config.bind_password
-                )
-                user_dn, user_attrs = self._search_user_attributes(
-                    search_conn, username
-                )
+                search_conn.simple_bind_s(self._config.bind_dn, self._config.bind_password)
+                user_dn, user_attrs = self._search_user_attributes(search_conn, username)
             finally:
                 try:
                     search_conn.unbind()
@@ -336,12 +318,8 @@ class LDAPAuthPlugin(AuthPlugin):
             if not user_attrs:
                 attr_conn = self._new_connection(ldap_url)
                 try:
-                    attr_conn.simple_bind_s(
-                        self._config.bind_dn, self._config.bind_password
-                    )
-                    user_dn, user_attrs = self._search_user_attributes(
-                        attr_conn, username
-                    )
+                    attr_conn.simple_bind_s(self._config.bind_dn, self._config.bind_password)
+                    user_dn, user_attrs = self._search_user_attributes(attr_conn, username)
                 finally:
                     try:
                         attr_conn.unbind()
@@ -385,8 +363,7 @@ class LDAPAuthPlugin(AuthPlugin):
                 user_attrs = self._attrs_from_dn(user_dn)
         else:
             raise UnauthenticatedError(
-                "LDAP config requires either bind_dn/bind_password or "
-                "user_dn_pattern"
+                "LDAP config requires either bind_dn/bind_password or user_dn_pattern"
             )
 
         # Ensure DN is present in attributes for identity mapping.
@@ -397,9 +374,7 @@ class LDAPAuthPlugin(AuthPlugin):
             # returned no attributes.
             rdn_attr, rdn_value = self._parse_first_rdn(user_dn)
             if rdn_attr and rdn_value:
-                user_attrs.setdefault(
-                    rdn_attr.lower(), [rdn_value.encode("utf-8")]
-                )
+                user_attrs.setdefault(rdn_attr.lower(), [rdn_value.encode("utf-8")])
 
         return user_attrs
 
@@ -426,9 +401,7 @@ class LDAPAuthPlugin(AuthPlugin):
             return {}
         return {attr.lower(): [value.encode("utf-8")]}
 
-    def _normalize_attributes(
-        self, attributes: Dict[str, List[bytes]]
-    ) -> Dict[str, str]:
+    def _normalize_attributes(self, attributes: Dict[str, List[bytes]]) -> Dict[str, str]:
         """Normalize LDAP attributes from bytes to strings."""
         normalized: Dict[str, str] = {}
         for key, values in attributes.items():
@@ -461,15 +434,13 @@ class LDAPAuthPlugin(AuthPlugin):
 
         if not config.ldap.bind_dn and not config.ldap.user_dn_pattern:
             logger.error(
-                "LDAP config requires either 'bind_dn'/'bind_password' or "
-                "'user_dn_pattern'"
+                "LDAP config requires either 'bind_dn'/'bind_password' or 'user_dn_pattern'"
             )
             sys.exit(1)
 
         if config.ldap.bind_dn and not config.ldap.bind_password:
             logger.warning(
-                "LDAP config has 'bind_dn' but missing 'bind_password' — "
-                "searches may fail"
+                "LDAP config has 'bind_dn' but missing 'bind_password' — searches may fail"
             )
 
         logger.info("LDAP config validated successfully")
@@ -486,9 +457,7 @@ class LDAPAuthPlugin(AuthPlugin):
         # here. Operators can still override via the `identity` config block.
         self._mapper = IdentityMapper(self._config.identity)
 
-        logger.info(
-            "LDAP auth plugin initialized with host=%s", self._config.host
-        )
+        logger.info("LDAP auth plugin initialized with host=%s", self._config.host)
 
     def can_skip_api_key_for_bot_proxy(self) -> bool:
         """LDAP does not declare bot-proxy compatibility until VikingBot

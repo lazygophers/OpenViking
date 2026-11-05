@@ -124,11 +124,7 @@ async def _scan_privacy_content(
         # VikingFS does not expose a has_more bit on this internal tree call.
         # Treat an exactly full page conservatively as truncated.
         truncated = len(entries) >= node_limit
-        files.extend(
-            entry
-            for entry in entries
-            if not entry.get("isDir") and entry.get("uri")
-        )
+        files.extend(entry for entry in entries if not entry.get("isDir") and entry.get("uri"))
     else:
         files.append({"uri": root, "size": stat.get("size")})
 
@@ -181,9 +177,7 @@ async def _scan_privacy_content(
             min_interval = 1.0 / PRIVACY_SCAN_FILES_PER_SECOND
             delay = min_interval - (time.monotonic() - last_read_at)
             if delay > 0:
-                remaining = PRIVACY_SCAN_MAX_DURATION_SECONDS - (
-                    time.monotonic() - started_at
-                )
+                remaining = PRIVACY_SCAN_MAX_DURATION_SECONDS - (time.monotonic() - started_at)
                 if remaining <= delay:
                     truncated = True
                     stop_reason = "duration_limit"
@@ -240,9 +234,7 @@ async def _scan_privacy_content(
             continue
         if not result.replacements and not result.ambiguous_references:
             continue
-        all_references = sorted(
-            {replacement.reference for replacement in result.replacements}
-        )
+        all_references = sorted({replacement.reference for replacement in result.replacements})
         all_ambiguous = sorted(set(result.ambiguous_references))
         references_truncated = len(all_references) > PRIVACY_SCAN_MAX_REFERENCE_DETAILS_PER_FILE
         ambiguous_truncated = len(all_ambiguous) > PRIVACY_SCAN_MAX_REFERENCE_DETAILS_PER_FILE

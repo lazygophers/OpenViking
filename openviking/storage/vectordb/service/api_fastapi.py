@@ -661,9 +661,7 @@ async def search_by_keywords(request: SearchByKeywordsRequest, req: Request):
                 query=query,
                 mode=request.mode,
                 fields=(
-                    data_utils.convert_dict(request.fields)
-                    if request.fields is not None
-                    else None
+                    data_utils.convert_dict(request.fields) if request.fields is not None else None
                 ),
                 limit=limit,
                 offset=offset,

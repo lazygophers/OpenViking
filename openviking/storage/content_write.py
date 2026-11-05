@@ -27,7 +27,6 @@ from openviking.core.namespace_policy import (
     NamespaceProcessingMode,
     namespace_policy_for_uri,
 )
-from openviking.service.task_domain import collect_queue_work_errors
 from openviking.privacy.sanitizer import PrivacySanitizer
 from openviking.resource.processing_mode import (
     DEFAULT_PROCESSING_MODE,
@@ -36,6 +35,7 @@ from openviking.resource.processing_mode import (
 )
 from openviking.resource.watch_storage import is_watch_task_control_uri
 from openviking.server.identity import RequestContext, Role
+from openviking.service.task_domain import collect_queue_work_errors
 from openviking.service.task_tracker import (
     TaskStatus,
     get_task_tracker,

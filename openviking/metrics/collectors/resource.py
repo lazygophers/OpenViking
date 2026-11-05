@@ -50,7 +50,9 @@ class ResourceIngestionCollector(EventMetricCollector):
         DOMAIN, "wait_duration", unit="seconds"
     )
 
-    SUPPORTED_EVENTS: ClassVar[frozenset[str]] = frozenset({"resource.import", "resource.stage", "resource.wait"})
+    SUPPORTED_EVENTS: ClassVar[frozenset[str]] = frozenset(
+        {"resource.import", "resource.stage", "resource.wait"}
+    )
 
     def collect(self, registry=None) -> None:
         """Implement the collector interface as a no-op because resource metrics are push-driven."""

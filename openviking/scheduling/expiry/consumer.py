@@ -346,7 +346,7 @@ class ExpiryConsumer:
         try:
             self._metrics.log_exhausted(
                 claim,
-                max_attempts=self._binding.options.max_attempts,
+                max_attempts=self._binding.options.max_attempts or 1,
                 reason=reason,
             )
         except Exception as exc:

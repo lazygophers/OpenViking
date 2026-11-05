@@ -309,7 +309,11 @@ def _create_collection_table(
         if capability["state"] != "available":
             raise FailedPreconditionError(
                 f"Native BM25 is unavailable: {capability['state']}",
-                details={"backend": "opengauss", "capability": "bm25", "state": capability["state"]},
+                details={
+                    "backend": "opengauss",
+                    "capability": "bm25",
+                    "state": capability["state"],
+                },
             )
     col_ddls = []
     has_vector = False
@@ -366,7 +370,9 @@ def _create_collection_table(
             )
             cur.execute(_BM25_INDEX_CATALOG_SQL, (name, spec["name"]))
             if not _matches_bm25_index(cur.fetchall(), spec):
-                raise FailedPreconditionError("Native BM25 index failed physical catalog validation")
+                raise FailedPreconditionError(
+                    "Native BM25 index failed physical catalog validation"
+                )
         conn.commit()
         if fulltext:
             meta["_fulltext_index"] = spec

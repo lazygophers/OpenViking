@@ -25,12 +25,9 @@ _LEADER_COMPONENT_CHARS = frozenset("._-:")
 
 def _validate_component(name: str, value: str) -> None:
     if not value or not all(
-        char.isascii() and (char.isalnum() or char in _LEADER_COMPONENT_CHARS)
-        for char in value
+        char.isascii() and (char.isalnum() or char in _LEADER_COMPONENT_CHARS) for char in value
     ):
-        raise ValueError(
-            f"{name} must contain only ASCII letters, digits, '.', '_', '-' or ':'"
-        )
+        raise ValueError(f"{name} must contain only ASCII letters, digits, '.', '_', '-' or ':'")
 
 
 def _validate_timing(name: str, value: float) -> None:
@@ -89,9 +86,7 @@ class _NativeLeaderBackend:
                 await self._release_acquired_after_cancel(future)
             raise
 
-    async def _release_acquired_after_cancel(
-        self, future: asyncio.Future[str | None]
-    ) -> None:
+    async def _release_acquired_after_cancel(self, future: asyncio.Future[str | None]) -> None:
         try:
             lease_ref = future.result()
         except asyncio.CancelledError:
@@ -147,11 +142,7 @@ class _LocalLeaderBackend:
         with self._lock:
             lease = self._leases.get(lease_ref)
             now = time.monotonic()
-            if (
-                lease is None
-                or lease.expires_at <= now
-                or self._owners.get(lease.key) != lease_ref
-            ):
+            if lease is None or lease.expires_at <= now or self._owners.get(lease.key) != lease_ref:
                 self._leases.pop(lease_ref, None)
                 if lease is not None and self._owners.get(lease.key) == lease_ref:
                     self._owners.pop(lease.key, None)
@@ -246,9 +237,7 @@ class LeaderCandidate(AsyncIterator[Leadership]):
             if lease_ref is not None:
                 deadline = acquire_started + self._ttl_secs
                 accepted = (
-                    self._active
-                    and self._generation == generation
-                    and loop.time() < deadline
+                    self._active and self._generation == generation and loop.time() < deadline
                 )
                 if accepted:
                     stop_event = asyncio.Event()

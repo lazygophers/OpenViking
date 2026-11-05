@@ -1709,11 +1709,15 @@ class OpenGaussCollection(OpenGaussFulltextMixin, OpenGaussRetrievalMixin, IColl
                 try:
                     self._conn.rollback()
                 except Exception:
-                    logger.warning("openGauss upsert rollback failed during error cleanup", exc_info=True)
+                    logger.warning(
+                        "openGauss upsert rollback failed during error cleanup", exc_info=True
+                    )
                 try:
                     cursor.close()
                 except Exception:
-                    logger.warning("openGauss upsert cursor close failed during error cleanup", exc_info=True)
+                    logger.warning(
+                        "openGauss upsert cursor close failed during error cleanup", exc_info=True
+                    )
                 raise
             else:
                 cursor.close()

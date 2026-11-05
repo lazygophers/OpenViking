@@ -78,9 +78,7 @@ def build_account_store(
         try:
             from openviking.server.account_stores.mysql import MySQLAccountStore
         except ImportError:
-            raise RuntimeError(
-                "MySQL account storage requires openviking[mysql]"
-            ) from None
+            raise RuntimeError("MySQL account storage requires openviking[mysql]") from None
         return MySQLAccountStore(
             service_name=service_name,
             params=account_store_params,

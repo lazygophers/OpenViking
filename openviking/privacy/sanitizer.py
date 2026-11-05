@@ -205,10 +205,7 @@ class PrivacySanitizer:
                     # sensitivity from field names. Very short values are not
                     # safe for global substring replacement because ordinary
                     # prose would produce excessive false positives.
-                    if (
-                        not isinstance(value, str)
-                        or len(value) < MIN_PROTECTED_VALUE_CHARS
-                    ):
+                    if not isinstance(value, str) or len(value) < MIN_PROTECTED_VALUE_CHARS:
                         continue
                     reference = build_privacy_field_reference(
                         ctx.user.user_id,

@@ -8,7 +8,7 @@ import time
 from contextlib import asynccontextmanager, contextmanager
 from contextvars import ContextVar
 from threading import Lock
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, TypeGuard
 
 from openviking.connector.client import ConnectorClient
 from openviking.server.identity import RequestContext
@@ -296,7 +296,7 @@ async def confluence_auth_config(args: Dict[str, Any], ctx: RequestContext) -> D
     return {"access_token": await asyncio.to_thread(provider.get_token)}
 
 
-def is_external_feishu_auth(state: Optional[Dict[str, Any]]) -> bool:
+def is_external_feishu_auth(state: Optional[Dict[str, Any]]) -> TypeGuard[Dict[str, Any]]:
     return isinstance(state, dict) and state.get("provider") == EXTERNAL_FEISHU_PROVIDER
 
 
