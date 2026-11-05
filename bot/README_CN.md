@@ -261,6 +261,28 @@ vikingbot gateway
 vikingbot channels status
 ```
 
+使用 Lark（飞书国际版）时，同样配置 `feishu` 通道，并把 `domain` 指向 Lark 域名：
+
+```json
+{
+  "bot": {
+    "channels": [
+      {
+        "type": "feishu",
+        "enabled": true,
+        "app_id": "<lark-app-id>",
+        "app_secret": "<lark-app-secret>",
+        "domain": "https://open.larksuite.com",
+        "allow_from": [],
+        "ov_tools_enable": true
+      }
+    ]
+  }
+}
+```
+
+通过 studio 接入已有应用时，域名会自动探测，无需手动配置。只有手动编辑配置文件时才需要像上面这样显式填写 `domain`。
+
 同一种渠道可以配置多个实例。VikingBot 使用 `type + channel_id + chat_id` 隔离会话和路由回复。各平台的凭证、事件订阅和权限配置见 [渠道配置](docs/zh/concepts/05-channel.md)。
 
 ## 连接 OpenViking

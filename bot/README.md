@@ -264,6 +264,28 @@ vikingbot gateway
 vikingbot channels status
 ```
 
+To use Lark (the international version of Feishu), configure the same `feishu` channel and set `domain` to the Lark domain:
+
+```json
+{
+  "bot": {
+    "channels": [
+      {
+        "type": "feishu",
+        "enabled": true,
+        "app_id": "<lark-app-id>",
+        "app_secret": "<lark-app-secret>",
+        "domain": "https://open.larksuite.com",
+        "allow_from": [],
+        "ov_tools_enable": true
+      }
+    ]
+  }
+}
+```
+
+When onboarding through studio (connect an existing app), the domain is detected automatically and no manual configuration is needed. Only a hand-edited configuration file requires the explicit `domain` setting above.
+
 You can configure multiple instances of the same channel type. VikingBot uses `type + channel_id + chat_id` to isolate sessions and route replies. See [Channel Configuration](docs/en/concepts/05-channel.md) for credentials, event subscriptions, and permissions for each platform.
 
 ## Connect to OpenViking
