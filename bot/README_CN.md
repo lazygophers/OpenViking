@@ -314,6 +314,27 @@ VikingBot 使用 OpenViking 完成：
 
 详细调用链见 [VikingBot 与 OpenViking 集成](docs/zh/concepts/04-openviking-integration.md)。Gateway 入口与鉴权边界来自 [RFC #3042](https://github.com/volcengine/OpenViking/discussions/3042)。
 
+### 普通用户 Key 与管理员 Key
+
+`api_key` 模式下，`bot.ov_server.api_key` 可以填普通用户 Key（角色 `user`）或管理员 Key（角色 `admin`），两者的启动和运行方式一致。其他角色的 Key（例如 Root Key）会在启动时被拒绝。
+
+```json
+{
+  "bot": {
+    "ov_server": {
+      "server_url": "https://openviking.example.com",
+      "api_key": "<user-or-admin-api-key>"
+    }
+  }
+}
+```
+
+- **身份跟随 Key。** 启动时 Bot 会从 OpenViking 服务读取该 Key 所属的账号和用户。记忆写入该用户名下，允许执行命令的也是该用户。
+- **显式配置优先。** 如果设置了 `bot.ov_server.account_id` 或 `bot.ov_server.admin_user_id`，则使用配置值，不使用从 Key 解析出的值，因此现有配置的行为保持不变。
+- **Gateway 中 `exec` 的差别。** 在 Gateway 中，使用普通用户 Key 认证的连接禁用 `exec` 工具；使用管理员 Key 认证的连接保留该工具。
+
+`trusted` 模式下使用的 Root Key 不受影响：设置 `api_key_type: "root"`，并继续显式传入账号和用户。
+
 ## 配置说明
 
 配置文件默认为 `~/.openviking/ov.conf`，可通过环境变量指定：
