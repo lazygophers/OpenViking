@@ -681,6 +681,15 @@ def _validate_api_key_mode_key(ov_server: Any, server_url: str) -> None:
     account_id = str(data.get("account_id") or "").strip()
     user_id = str(data.get("user_id") or "").strip()
     if role in {"user", "admin"} and account_id and user_id:
+        # Fill unset identity fields from the key's /health identity so memory
+        # ownership, the command whitelist, and READONLY consolidation follow it.
+        # Explicitly configured values (including "default") always win.
+        fields_set = getattr(ov_server, "model_fields_set", None)
+        if fields_set is not None:
+            if "account_id" not in fields_set:
+                ov_server.account_id = account_id
+            if "admin_user_id" not in fields_set:
+                ov_server.admin_user_id = user_id
         return
     if role == "root":
         _raise_api_key_mode_root_key()
