@@ -335,3 +335,16 @@ line-ending = "auto"
 dev = [
     "pytest>=9.0.2",
 ]
+build = [
+    "setuptools>=70.1",
+    "setuptools-scm>=8",
+    "cmake>=3.15",
+]
+
+[[tool.uv.index]]
+name = "llama-cpp-python-metal"
+url = "https://abetlen.github.io/llama-cpp-python/whl/metal"
+explicit = true
+
+[tool.uv.sources]
+llama-cpp-python = { index = "llama-cpp-python-metal" }

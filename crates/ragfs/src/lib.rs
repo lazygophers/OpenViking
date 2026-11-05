@@ -26,7 +26,6 @@
 //! }
 //! ```
 
-#![warn(missing_docs)]
 #![warn(clippy::all)]
 
 #[cfg(feature = "cache")]

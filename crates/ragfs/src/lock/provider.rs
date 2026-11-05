@@ -948,7 +948,7 @@ impl PathLockProvider for FilesystemPathLockProvider {
                     let raw = String::from_utf8_lossy(&data).trim().to_string();
                     match LockTokenCodec::decode(&raw) {
                         Ok(token) => return Ok(Some(token)),
-                        Err(error) if crypto::is_encrypted(&data) => {
+                        Err(_error) if crypto::is_encrypted(&data) => {
                             if self
                                 .fs
                                 .compare_and_remove(lock_path, &data)

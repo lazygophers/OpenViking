@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -2482,8 +2482,8 @@ wheels = [
 
 [[package]]
 name = "llama-cpp-python"
-version = "0.3.21"
-source = { registry = "https://pypi.org/simple" }
+version = "0.3.35"
+source = { registry = "https://abetlen.github.io/llama-cpp-python/whl/metal" }
 dependencies = [
     { name = "diskcache" },
     { name = "jinja2" },
@@ -2491,7 +2491,9 @@ dependencies = [
     { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e6/0f/17c0e400ed17094b360e3bcc07e7fbca890e0042a5a1e9dabb056693d57f/llama_cpp_python-0.3.21.tar.gz", hash = "sha256:533636e23953d1efcf16ddf5862d963405e4bc0bccfc04ba90e9ee7afefefa75", size = 67604365, upload-time = "2026-04-27T05:17:44.296Z" }
+wheels = [
+    { url = "https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.35-metal/llama_cpp_python-0.3.35-py3-none-macosx_11_0_arm64.whl" },
+]
 
 [[package]]
 name = "loguru"
@@ -3791,6 +3793,11 @@ test = [
 ]
 
 [package.dev-dependencies]
+build = [
+    { name = "cmake" },
+    { name = "setuptools" },
+    { name = "setuptools-scm" },
+]
 dev = [
     { name = "pytest" },
 ]
@@ -3843,7 +3850,7 @@ requires-dist = [
     { name = "lark-oapi", specifier = ">=1.5.3" },
     { name = "lark-oapi", marker = "extra == 'bot'", specifier = ">=1.0.0" },
     { name = "litellm", specifier = ">=1.83.7,<1.91.2" },
-    { name = "llama-cpp-python", marker = "extra == 'local-embed'", specifier = ">=0.3.0" },
+    { name = "llama-cpp-python", marker = "extra == 'local-embed'", specifier = ">=0.3.0", index = "https://abetlen.github.io/llama-cpp-python/whl/metal" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "mcp", specifier = ">=1.27,<2" },
     { name = "mcp", marker = "extra == 'bot'", specifier = ">=1,<2" },
@@ -3946,6 +3953,11 @@ requires-dist = [
 provides-extras = ["expiry", "gateway-fast", "mysql", "redis-mysql", "test", "auth", "dev", "doc", "eval", "gemini", "gemini-async", "ocr", "build", "bot", "benchmark", "local-embed", "opengauss"]
 
 [package.metadata.requires-dev]
+build = [
+    { name = "cmake", specifier = ">=3.15" },
+    { name = "setuptools", specifier = ">=70.1" },
+    { name = "setuptools-scm", specifier = ">=8" },
+]
 dev = [{ name = "pytest", specifier = ">=9.0.2" }]
 
 [[package]]

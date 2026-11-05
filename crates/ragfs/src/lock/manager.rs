@@ -1065,7 +1065,7 @@ impl PathLockManager {
         match result {
             Ok(owned) => {
                 let elapsed_ns = u64::try_from(start.elapsed().as_nanos()).unwrap_or(u64::MAX);
-                let _ = self.wait_duration_ns.fetch_update(
+                let _ = self.wait_duration_ns.try_update(
                     AtomicOrdering::Relaxed,
                     AtomicOrdering::Relaxed,
                     |total| Some(total.saturating_add(elapsed_ns)),

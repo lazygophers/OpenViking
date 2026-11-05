@@ -1,7 +1,7 @@
 # Makefile for OpenViking
 
 # Variables
-PYTHON ?= python3
+PYTHON ?= .venv/bin/python
 SETUP_PY := setup.py
 OV_CLI_DIR := crates/ov_cli
 
@@ -28,7 +28,8 @@ CLEAN_DIRS := \
 	**/__pycache__/
 
 .PHONY: all build clean help check-pip check-deps
-.PHONY: build-cli build-studio
+.PHONY: build-cli build-studio install
+.PHONY: lint test
 
 all: build
 
@@ -38,7 +39,10 @@ help:
 	@echo "  build-cli       - Build Rust CLI (ov) in development mode (fast) and copy to openviking/bin/"
 	@echo "  build-studio    - Build web-studio SPA and copy into openviking/web_studio/dist/"
 	@echo "  clean           - Remove build artifacts and temporary files"
+	@echo "  install         - Build wheel and pipx-install it (overwrites existing openviking)"
 	@echo "  check-deps      - Check if required dependencies (Rust, CMake, etc.) are installed"
+	@echo "  lint            - Run ruff format --check, ruff check and mypy (requires dev extra)"
+	@echo "  test            - Run bot test suite via pytest (requires test extra)"
 	@echo "  help            - Show this help message"
 
 check-pip:
@@ -94,14 +98,22 @@ build: check-deps check-pip build-studio
 	else \
 		echo "  [SKIP] project .venv not found; skip ragfs native cleanup"; \
 	fi
+	@echo "Installing build dependencies..."
+	@if command -v uv > /dev/null 2>&1 && uv pip --help > /dev/null 2>&1; then \
+		echo "  [OK] uv pip found, installing build deps..."; \
+		uv pip install "setuptools>=70.1" "setuptools-scm>=8" "cmake>=3.15"; \
+	else \
+		echo "  [OK] pip found, installing build deps..."; \
+		$(PYTHON) -m pip install "setuptools>=70.1" "setuptools-scm>=8" "cmake>=3.15"; \
+	fi
 	@echo "Starting build process via setup.py..."
 	$(PYTHON) $(SETUP_PY) build_ext --inplace
 	@if command -v uv > /dev/null 2>&1 && uv pip --help > /dev/null 2>&1; then \
 		echo "  [OK] uv pip found, use uv pip to install..."; \
-		uv pip install -e .; \
+		uv pip install -e . --no-build-isolation; \
 	else \
 		echo "  [OK] pip found, use pip to install..."; \
-		$(PYTHON) -m pip install -e .; \
+		$(PYTHON) -m pip install -e . --no-build-isolation; \
 	fi
 	@echo "Building ragfs-python (Rust RAGFS binding) into openviking/lib/..."
 	@set -e; \
@@ -142,6 +154,38 @@ build: check-deps check-pip build-studio
 		echo "         Install maturin to enable: uv pip install maturin"; \
 	fi
 	@echo "Build completed successfully."
+
+OV_RUN_PORT ?=
+OV_RUN_BOT_PORT ?=
+
+run:
+	uv sync --extra bot --group build
+	$(MAKE) build
+	$(CURDIR)/.venv/bin/openviking-server --with-bot \
+		$(if $(OV_RUN_PORT),--port $(OV_RUN_PORT)) \
+		$(if $(OV_RUN_BOT_PORT),--bot-port $(OV_RUN_BOT_PORT))
+
+PIP_PYTHON := 3.12
+
+install: build-studio
+	@echo "Building wheel for pipx install..."
+	uv build --wheel
+	@set -e; \
+	WHEEL=$$(ls -t dist/openviking-*.whl | head -1); \
+	echo "  [OK] built $$WHEEL"; \
+	pipx install --force --python $(PIP_PYTHON) "$$WHEEL"; \
+	echo "  [OK] installed. Version check:"; \
+	"$$(pipx environment --value PIPX_LOCAL_VENVS)/openviking/bin/openviking-server" --version
+
+lint:
+	uv sync --extra dev --extra test --extra bot --group build
+	$(PYTHON) -m ruff format --check openviking
+	$(PYTHON) -m ruff check openviking
+	$(PYTHON) -m mypy --follow-imports=skip openviking/scheduling openviking/connector
+
+test:
+	uv sync --extra dev --extra test --extra bot --group build
+	cd bot && $(CURDIR)/.venv/bin/python -m pytest tests -q -o addopts='' --deselect "tests/test_bot_model_timeout.py::test_configured_timeout_reaches_chat_request[default]"
 
 clean:
 	@echo "Cleaning up build artifacts..."
