@@ -317,6 +317,27 @@ VikingBot uses OpenViking to:
 
 See [VikingBot and OpenViking Integration](docs/en/concepts/04-openviking-integration.md) for the complete call flow. The Gateway entry points and authentication boundaries follow [RFC #3042](https://github.com/volcengine/OpenViking/discussions/3042).
 
+### User Keys and Admin Keys
+
+In `api_key` mode, `bot.ov_server.api_key` accepts either a User Key (role `user`) or an Admin Key (role `admin`). Both start and run the same way. A key with any other role, such as a Root Key, is rejected at startup.
+
+```json
+{
+  "bot": {
+    "ov_server": {
+      "server_url": "https://openviking.example.com",
+      "api_key": "<user-or-admin-api-key>"
+    }
+  }
+}
+```
+
+- **Identity follows the key.** At startup the Bot reads the account and user the key belongs to from the OpenViking service. Memories are written under that user, and the same user is the one allowed to run commands.
+- **Explicit settings take precedence.** If `bot.ov_server.account_id` or `bot.ov_server.admin_user_id` is set, the configured value is used instead of the one resolved from the key. Existing configurations therefore behave as before.
+- **Gateway `exec` difference.** In the Gateway, connections authenticated with a User Key have the `exec` tool disabled; connections authenticated with an Admin Key keep it.
+
+Root Keys used with `trusted` mode are unchanged: set `api_key_type` to `"root"` and keep passing the account and user explicitly.
+
 ## Configuration
 
 The default configuration file is `~/.openviking/ov.conf`. Use an environment variable to select another file:
