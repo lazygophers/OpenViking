@@ -824,6 +824,105 @@ def test_validate_openviking_auth_allows_user_key(monkeypatch, capsys):
     assert captured.err == ""
 
 
+def _load_and_validate_api_key_config(tmp_path, monkeypatch, bot_ov_server, *, role="user"):
+    config_path = tmp_path / "ov.conf"
+    config_path.write_text(
+        json.dumps(
+            {
+                "server": {
+                    "host": "127.0.0.1",
+                    "port": 1935,
+                    "auth_mode": "api_key",
+                    "root_api_key": "server-root-key",
+                },
+                "bot": {"ov_server": bot_ov_server},
+            }
+        )
+    )
+    monkeypatch.setattr(config_loader_module, "CONFIG_PATH", config_path)
+    config = config_loader_module.load_config()
+
+    def _fake_probe(_server_url, _path, *, headers=None):
+        return _auth_probe(
+            data={
+                "auth_mode": "api_key",
+                "role": role,
+                "account_id": "acct-x",
+                "user_id": "alice",
+            }
+        )
+
+    monkeypatch.setattr(config_loader_module, "_request_openviking_json", _fake_probe)
+    config_loader_module.validate_openviking_auth(config)
+    return config
+
+
+def test_api_key_mode_user_key_writes_back_resolved_identity(tmp_path, monkeypatch):
+    config = _load_and_validate_api_key_config(tmp_path, monkeypatch, {"api_key": "u-key"})
+
+    assert config.ov_server.admin_user_id == "alice"
+    assert config.ov_server.account_id == "acct-x"
+
+
+def test_api_key_mode_admin_key_writes_back_resolved_identity(tmp_path, monkeypatch):
+    config = _load_and_validate_api_key_config(
+        tmp_path, monkeypatch, {"api_key": "admin-key"}, role="admin"
+    )
+
+    assert config.ov_server.admin_user_id == "alice"
+    assert config.ov_server.account_id == "acct-x"
+
+
+def test_api_key_mode_writeback_keeps_explicit_admin_user_id(tmp_path, monkeypatch):
+    config = _load_and_validate_api_key_config(
+        tmp_path, monkeypatch, {"api_key": "u-key", "admin_user_id": "boss"}
+    )
+
+    assert config.ov_server.admin_user_id == "boss"
+    assert config.ov_server.account_id == "acct-x"
+
+
+def test_api_key_mode_writeback_keeps_explicit_default_values(tmp_path, monkeypatch):
+    config = _load_and_validate_api_key_config(
+        tmp_path,
+        monkeypatch,
+        {"api_key": "u-key", "admin_user_id": "default", "account_id": "default"},
+    )
+
+    assert config.ov_server.admin_user_id == "default"
+    assert config.ov_server.account_id == "default"
+
+
+def test_api_key_mode_unsupported_role_still_fails_at_startup(tmp_path, monkeypatch, capsys):
+    with pytest.raises(SystemExit):
+        _load_and_validate_api_key_config(
+            tmp_path, monkeypatch, {"api_key": "u-key"}, role="service"
+        )
+
+    assert "User/Admin API key" in capsys.readouterr().err
+
+
+@pytest.mark.asyncio
+async def test_api_key_writeback_identity_drives_memory_target_uri(tmp_path, monkeypatch):
+    config = _load_and_validate_api_key_config(tmp_path, monkeypatch, {"api_key": "u-key"})
+    monkeypatch.setattr(ov_server_module, "load_config", lambda: config)
+
+    client = VikingClient()
+    assert client.admin_user_id == "alice"
+
+    store = MemoryStore(tmp_path)
+    search_targets = []
+
+    async def _search(query, target_uri=None, limit=10):
+        search_targets.append(target_uri)
+        return {"memories": []}
+
+    monkeypatch.setattr(client, "search", _search)
+    await store._search_memory_type(client, "hello", memory_type="cases", limit=5)
+
+    assert search_targets == ["viking://user/alice/memories/cases/"]
+
+
 def test_validate_openviking_auth_uses_effective_auth_mode_not_legacy_mode(monkeypatch, capsys):
     config = SimpleNamespace(
         ov_server=SimpleNamespace(

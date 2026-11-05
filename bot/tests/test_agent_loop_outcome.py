@@ -13,7 +13,7 @@ from vikingbot.agent.tools.base import MultimodalToolResult
 from vikingbot.agent.tools.registry import ToolExecutionResult
 from vikingbot.bus.events import InboundMessage, OutboundEventType
 from vikingbot.bus.queue import MessageBus
-from vikingbot.config.schema import AgentsConfig, Config, SessionKey
+from vikingbot.config.schema import AgentsConfig, BotMode, Config, SessionKey
 from vikingbot.hooks.builtins.openviking_hooks import OpenVikingCompactHook
 from vikingbot.openviking_mount.session_state import make_openviking_storage_session_id
 from vikingbot.providers.base import LLMProvider, LLMResponse, ToolCallRequest
@@ -1635,3 +1635,29 @@ async def test_wm_compaction_only_clears_history_after_confirmation(
         loop._get_ov_client = AsyncMock(side_effect=AssertionError("Keep the full local history"))
         history = await loop._build_prompt_history(session)
         assert [m["content"] for m in history] == [m["content"] for m in original]
+
+
+def test_check_cmd_auth_uses_written_back_ov_server_identity():
+    # Config-loader write-back fills ov_server.admin_user_id with the API key's
+    # resolved identity; the command whitelist must follow that same field.
+    loop_stub = SimpleNamespace(
+        config=SimpleNamespace(
+            mode=BotMode.READONLY,
+            ov_server=SimpleNamespace(admin_user_id="alice"),
+        ),
+        _get_channel_config=lambda _session_key: None,
+    )
+    session_key = SessionKey(type="cli", channel_id="default", chat_id="chat-1")
+
+    assert (
+        AgentLoop._check_cmd_auth(
+            loop_stub, SimpleNamespace(sender_id="alice", session_key=session_key)
+        )
+        is True
+    )
+    assert (
+        AgentLoop._check_cmd_auth(
+            loop_stub, SimpleNamespace(sender_id="mallory", session_key=session_key)
+        )
+        is False
+    )
